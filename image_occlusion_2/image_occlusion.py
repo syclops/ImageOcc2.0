@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
 
+# Icon design by FatCow Web Hosting
+
 from PyQt4 import QtCore, QtGui, QtWebKit
-from aqt import mw, utils, webview
+from aqt import mw, utils, webview, editor
 from aqt.qt import *
 from anki import hooks
+from aqt.editor import Editor
 from aqt import deckchooser
 from aqt import tagedit
 import aqt.forms
+
+from BeautifulSoup import BeautifulSoup
+
+# import the icons
+from resources import *
+## Will be used when I implement editing o occlusions
+#from add_notes import IMAGE_QA_MODEL_NAME, ORIGINAL_IMAGE_FIELD_IDX
 
 import os
 import base64
@@ -66,10 +76,10 @@ class ImageOcc_Add(QtCore.QObject):
         super(QtCore.QObject, self).__init__()
         self.ed = ed
         self.mw = mw
-        if not 'image_occlusion_conf' in mw.col.conf: # If addon has never been run
+        if not 'image_occlusion_conf' in mw.col.conf:
+        # If addon has never been run:
             self.mw.col.conf['image_occlusion_conf'] = default_conf
-    
-    
+
     def add_notes(self):
         clip = QApplication.clipboard()
         if clip.mimeData().imageData():
@@ -112,17 +122,17 @@ class ImageOcc_Add(QtCore.QObject):
             url.addQueryItem('initFill[color]', initFill_color)
             url.addQueryItem('dimensions', '{0},{1}'.format(width,height))
             url.addQueryItem('source', svg_b64)
-            
+         
             tags = self.ed.note.tags
             mw.ImageOcc_Editor = ImageOcc_Editor(tags)
-            
+         
             mw.ImageOcc_Editor.svg_edit.page().mainFrame().addToJavaScriptWindowObject("pyObj", self)
-            mw.ImageOcc_Editor.svg_edit.load(url)            
+            mw.ImageOcc_Editor.svg_edit.load(url)
 
     
     @QtCore.pyqtSlot(str)
     def add_notes_non_overlapping(self, svg_contents):
-        svg = etree.fromstring(svg_contents)
+        svg = etree.fromstring(svg_contents.encode('utf-8'))
         mask_fill_color, did, tags, header, footer = get_params_for_add_notes()
         # Add notes to the current deck of the collection:
         notes_from_svg.add_notes_non_overlapping(svg, mask_fill_color,
@@ -131,7 +141,7 @@ class ImageOcc_Add(QtCore.QObject):
     
     @QtCore.pyqtSlot(str)
     def add_notes_overlapping(self, svg_contents):
-        svg = etree.fromstring(svg_contents)
+        svg = etree.fromstring(svg_contents.encode('utf-8'))
         mask_fill_color, did, tags, header, footer = get_params_for_add_notes()
         # Add notes to the current deck of the collection:
         notes_from_svg.add_notes_overlapping(svg, mask_fill_color,
@@ -149,11 +159,26 @@ def get_params_for_add_notes():
     tags = mw.ImageOcc_Editor.tags_edit.text().split()
     return (mask_fill_color, did, tags, header, footer)
 
+
 def add_image_occlusion_button(ed):
     ed.image_occlusion = ImageOcc_Add(ed)
-    ed._addButton("image_occlusion", ed.image_occlusion.add_notes,
-            key="Alt+o", size=False, text=_("Image Occlusion"),
+
+    ed._addButton("new_occlusion", ed.image_occlusion.add_notes,
+            key="Alt+o", size=False,
             native=True, canDisable=False)
+## Will be used when I implement editing occlusions
+#    edit_button = ed._addButton("edit_occlusion",
+#            ed.image_occlusion.removeNote,
+#            size=False,
+#            native=True, canDisable=False)
+#
+#    ed.image_occlusion.edit_button = edit_button
+#
+#def disable_edit_button(ed):
+#    if ed.note.model()['name'] != IMAGE_QA_MODEL_NAME:
+#        ed.image_occlusion.edit_button.setEnabled(False)
+#    else:
+#        ed.image_occlusion.edit_button.setEnabled(True)
 
 class ImageOcc_Editor(QWidget):
     def __init__(self, tags):
@@ -305,5 +330,5 @@ mw.form.menuTools.addAction(options_action)
 mw.form.menuHelp.addAction(help_action)
     
 hooks.addHook('setupEditorButtons', add_image_occlusion_button)
-
-
+## Will be used when I implement editing occlusions
+#Editor.loadNote = hooks.wrap(Editor.loadNote, disable_edit_button)
