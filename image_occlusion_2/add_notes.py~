@@ -202,7 +202,6 @@ def gui_add_QA_note(fnames_q, fnames_a, media_dir, tags, svg_fname,
     if not mm.byName(IMAGE_QA_MODEL_NAME): # first time addon is run
         add_image_QA_model(col)
     m = mm.byName(IMAGE_QA_MODEL_NAME)
-    # Upgrade CSS: (fixes AnkiDroid rendering)
     if m['css'] != css:
         m['css'] = css
 
